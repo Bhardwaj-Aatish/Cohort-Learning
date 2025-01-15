@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken')
 const app = express();
 
 const users = [];
-const JWT_SECRET = 'randomkeyajdljalfdj234js'
+const JWT_SECRET = 'thisismysecretkeylajdflajdflk'
 
 app.use(express.json())
 
