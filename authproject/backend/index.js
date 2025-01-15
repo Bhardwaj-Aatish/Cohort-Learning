@@ -7,6 +7,20 @@ const JWT_SECRET = 'randomkeyajdljalfdj234js'
 
 app.use(express.json())
 
+function auth (req, res, next) {
+  const token = req.headers.token;
+  const currentUser = jwt.verify(token, JWT_SECRET);
+
+  if(currentUser.username) {
+    req.username = currentUser.username;
+    next()
+  } else {
+    res.status(403).send({
+      message: 'You are not signed in'
+    })
+  }
+}
+
 app.post('/signup', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
@@ -51,21 +65,12 @@ app.post('/signin', (req, res) => {
 })
 
 
-app.get('/me', (req, res) => {
-  const token = req.headers.token;
-  const currentUser = jwt.verify(token, JWT_SECRET)
-  
-  if(currentUser.username) {
-    const user = users.find(user => user.username === currentUser.username);
+app.get('/me', auth, (req, res) => {
+    const user = users.find(user => user.username === req.username);
     res.send({
       username: user.username,
       password: user.password
     })
-  } else {
-    res.status(403).send({
-      message: 'You are not signed in'
-    })
-  }
 })
 
 app.listen(3000);
