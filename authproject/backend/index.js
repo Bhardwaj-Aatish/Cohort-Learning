@@ -1,11 +1,20 @@
 const express = require('express');
+// const path = require('path');
+const cors = require('cors');
 const jwt = require('jsonwebtoken')
 const app = express();
 
 const users = [];
 const JWT_SECRET = 'thisismysecretkeylajdflajdflk'
+// var corsOptions = {
+//   origin: 'http://localhost:5173',
+//   optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+// }
 
 app.use(express.json())
+app.use(cors())
+
+// app.use(express.static(path.join(__dirname, '../frontend/dist')));
 
 function auth (req, res, next) {
   const token = req.headers.token;
@@ -25,10 +34,11 @@ app.post('/signup', (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
 
-  const isUserAlreadyPresent = users.some(user => user.username === username);
+  const isUserAlreadyPresent = users.find(user => user.username === username);
 
+  // issue with some ?
   if(isUserAlreadyPresent) {
-    res.send({
+    res.status(403).send({
       message: 'Username is not unique'
     })
   } else {
@@ -64,6 +74,11 @@ app.post('/signin', (req, res) => {
   }
 })
 
+// todo serve frontend from backend only
+// app.get('/', (req, res) => {
+//   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
+// });
+
 
 app.get('/me', auth, (req, res) => {
     const user = users.find(user => user.username === req.username);
@@ -73,4 +88,4 @@ app.get('/me', auth, (req, res) => {
     })
 })
 
-app.listen(3000);
+app.listen(5000);

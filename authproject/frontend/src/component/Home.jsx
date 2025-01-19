@@ -1,17 +1,32 @@
 import React, { useState } from "react";
 
-function Home({token}) {
-  const [showUserInfo, setShowUserInfo] = useState(true);
+function Home({token, handleToken}) {
+  const [showUserInfo, setShowUserInfo] = useState(false);
+  const [user, setUser] = useState({username: '', password: ''})
 
-  // Dummy user data, will not need this once integration with backend
-  const user = {
-    username: "Aatish",
-    password: "Random123",
-    age: '21'
-  };
+  const getMyInfo = async () => {
+    try {
+      const result = await fetch('http://localhost:5000/me', {
+        headers : {
+          token
+        }
+      });
+      
+      if(!result.ok) {
+        throw new Error;
+      }
+      const currentUser = await result.json();
+      setUser(currentUser)
+      setShowUserInfo(true)
+    } catch (error) {
+      console.error("Error occured", error);
+    }
+
+  }
 
   const handleLogout = () => {
-    console.log("need to write logout logic here")
+    handleToken(undefined)
+    localStorage.removeItem('token')
   }
 
   return (
@@ -23,7 +38,7 @@ function Home({token}) {
         
         {/* Me Info Button */}
         <button
-          onClick={() => setShowUserInfo(true)}
+          onClick={getMyInfo}
           className="w-full py-3 mb-4 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition duration-300"
         >
           Me Info
@@ -46,7 +61,6 @@ function Home({token}) {
             <div className="space-y-4">
               <p><strong>Username:</strong> {user.username}</p>
               <p><strong>Password:</strong> {user.password}</p>
-              <p><strong>Age:</strong> {user.age}</p>
             </div>
             <div className="mt-6 text-center">
               <button

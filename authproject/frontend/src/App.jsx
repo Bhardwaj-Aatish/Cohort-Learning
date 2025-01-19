@@ -13,7 +13,7 @@ function App() {
 
   return (
     <>
-      {token ? <Login onLogin={handleLogin} /> : <Home token={token} />}
+      {!token ? <Login onLogin={handleLogin} /> : <Home token={token} handleToken={handleLogin} />}
     </>
   );
 }
