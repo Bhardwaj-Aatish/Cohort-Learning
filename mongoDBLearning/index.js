@@ -1,4 +1,4 @@
-const express = require("express");
+const express = require('express');
 const mongoose = require("mongoose");
 const jwt = require('jsonwebtoken')
 
@@ -23,9 +23,7 @@ function auth (req, res, next) {
       message: 'You are not allowed'
     })
   }
-
 }
-
 
 app.post('/signup', (req, res) => {
   const name = req.body.name;
@@ -55,7 +53,7 @@ app.post('/signin', (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
 
-  const user = users.find(user => user.email === email && user.password === password)
+  const user = users.find(user => user.email === email && user.password === password && user.name === name)
 
   if(user) {
     const token = jwt.sign({
@@ -88,12 +86,8 @@ app.post('/todo', auth,  (req, res) => {
 })
 
 app.get('/todos', auth, (req, res) => {
-  res.send({
-    todos
-  })
-
+  res.send({todos})
 })
-
 
 async function startServer() {
   // await mongoose.connect("mongodb+srv://aatishmongodb:Sourav1stCiena@cluster0.kcfiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/mongodbTest").then(() => console.log("your mongodb is connected now"))
