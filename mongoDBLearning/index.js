@@ -1,97 +1,98 @@
-const express = require('express');
-const mongoose = require("mongoose");
-const jwt = require('jsonwebtoken')
-
-const JWT_SECRET = 'randomjlajdfoaejlsfa'
-
-const users = []
-const todos = []
+const express = require("express");
+const { JWT_SECRET, auth, jwt } = require("./middlewares/auth");
+const { userModel, todoModel, connectToDatabase } = require("./db");
 
 const app = express();
 app.use(express.json());
 
-function auth (req, res, next) {
-  const token = req.headers.token;
-
-  const currentUserEmail = jwt.verify(token, JWT_SECRET)
-
-  if(currentUserEmail) {
-    req.email = currentUserEmail;
-    next();
-  } else {
-    res.status(403).send({
-      message: 'You are not allowed'
-    })
-  }
-}
-
-app.post('/signup', (req, res) => {
+app.post("/signup", async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
-  
-  const user = users.find(user => user.email === email)
 
-  if(user) {
+  const user = await userModel.findOne({ email: email });
+
+  if (user) {
     res.status(403).send({
-      message: 'Email is not unique'
-    })
+      message: "Email is not unique",
+    });
   } else {
-    users.push({
+    userModel.create({
       name,
       email,
-      password
-    })
+      password,
+    });
     res.send({
-      message: 'You have signed up successfully'
-    })
+      message: "You have signed up successfully",
+    });
   }
-})
+});
 
-app.post('/signin', (req, res) => {
+app.post("/signin", async (req, res) => {
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
 
-  const user = users.find(user => user.email === email && user.password === password && user.name === name)
+  const user = await userModel.findOne({
+    email: email,
+    password: password,
+    name: name,
+  });
 
-  if(user) {
-    const token = jwt.sign({
-      email
-    }, JWT_SECRET);
+  if (user) {
+    const token = jwt.sign(
+      {
+        id: user._id.toString(),
+      },
+      JWT_SECRET
+    );
 
     res.send({
-      token
-    })
+      token,
+    });
   } else {
     res.status(403).send({
-      message: 'Credentials are incorrect'
-    })
+      message: "Credentials are incorrect",
+    });
   }
-})
+});
 
-app.post('/todo', auth,  (req, res) => {
+app.post("/todo", auth, async (req, res) => {
   const title = req.body.title;
-  const done = req.body.title;
+  const done = req.body.done;
+  const userId = req.body.id;
 
-  todos.push({
-    title,
-    done
-  })
+  try {
+    await todoModel.create({
+      userId,
+      title,
+      done,
+    });
 
-  res.send({
-    message: 'Todos sent successfully'
-  })
+    res.send({
+      message: "Todos sent successfully",
+    });
+  } catch {
+    res.send({
+      message: "Server crashed",
+    });
+  }
+});
 
-})
-
-app.get('/todos', auth, (req, res) => {
-  res.send({todos})
-})
+app.get("/todos", auth, async (req, res) => {
+  try {
+    const todos = await todoModel.find({});
+    res.send(todos);
+  } catch {
+    res.send({
+      message: "Server crashed",
+    });
+  }
+});
 
 async function startServer() {
-  // await mongoose.connect("mongodb+srv://aatishmongodb:Sourav1stCiena@cluster0.kcfiu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0/mongodbTest").then(() => console.log("your mongodb is connected now"))
+  await connectToDatabase();
   app.listen(3000);
 }
 
-startServer()
+startServer();
