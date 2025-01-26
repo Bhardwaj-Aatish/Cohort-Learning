@@ -1,5 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
+const {z} = require("zod");
 const { JWT_SECRET, auth, jwt } = require("./middlewares/auth");
 const { userModel, todoModel, connectToDatabase } = require("./db");
 
@@ -7,10 +8,28 @@ const app = express();
 app.use(express.json());
 
 app.post("/signup", async (req, res) => {
+
+  const requiredSchema = z.object({
+    name: z.string().min(6).max(100),
+    email: z.string().min(6).max(100).email(),
+    password: z.string().min(6).max(40)
+  }).strict()
+
+  const {success, error} = requiredSchema.safeParse(req.body);
+
+  if(!success) {
+    res.send({
+      message: 'Your inputs are not correct',
+      errormessage: error
+    })
+    return
+  }
+
   const name = req.body.name;
   const email = req.body.email;
   const password = req.body.password;
 
+  
   try {
     const user = await userModel.findOne({ email: email });
 
@@ -37,6 +56,21 @@ app.post("/signup", async (req, res) => {
 });
 
 app.post("/signin", async (req, res) => {
+  const requiredSchema = z.object({
+    email: z.string().min(6).max(100).email(),
+    password: z.string().min(6).max(40)
+  }).strict()
+
+  const {success, error} = requiredSchema.safeParse(req.body);
+
+  if(!success) {
+    res.send({
+      message: 'Your inputs are not correct',
+      errormessage: error
+    })
+    return
+  }
+
   const email = req.body.email;
   const password = req.body.password;
 
